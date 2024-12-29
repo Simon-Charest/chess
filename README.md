@@ -11,7 +11,7 @@ npm audit fix --force
 ```
 2. Run Node.js solution:
 ```
-node chess.js
+node .
 ```
 3. Open solution: [https://localhost:3000/](https://localhost:3000/).
 

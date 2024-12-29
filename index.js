@@ -20,6 +20,7 @@ async function main() {
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));
 
+    // Route to render the main page
     app.get('/', async (req, res) => {
         res.render('chess', { initialBoard: config.initialBoard });
     });
