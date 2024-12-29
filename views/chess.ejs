@@ -19,6 +19,10 @@
                 width: 400px;
                 height: 400px;
             }
+            .holding {
+                cursor: grabbing;
+                background-color: yellow;
+            }
             .tile {
                 align-items: center;
                 color: black;
@@ -32,16 +36,43 @@
     </head>
     <body>
         <h1>Chess</h1>
-        <div class="chessboard">
-            <div class="chessboard">
-                <% initialBoard.forEach((row, rowIndex) => { %>
-                    <% row.forEach((piece, colIndex) => { %>
-                        <div class="tile <%= (rowIndex + colIndex) % 2 === 0 ? 'white' : 'black' %>">
-                            <%= piece %>
-                        </div>
-                    <% }) %>
+        <div class="chessboard" id="chessboard">
+            <% initialBoard.forEach((row, rowIndex) => { %>
+                <% row.forEach((piece, colIndex) => { %>
+                    <div class="tile <%= (rowIndex + colIndex) % 2 === 0 ? 'white' : 'black' %>" 
+                         data-row="<%= rowIndex %>" data-col="<%= colIndex %>">
+                        <%= piece %>
+                    </div>
                 <% }) %>
-            </div>            
+            <% }) %>
         </div>
+        <script>
+            let holdingPiece = null;
+    
+            document.addEventListener('DOMContentLoaded', () => {
+                const chessboard = document.getElementById('chessboard');
+    
+                // Event listeners for each tile
+                chessboard.addEventListener('click', (event) => {
+                    const tile = event.target.closest('.tile');
+    
+                    if (!tile) return;
+    
+                    if (!holdingPiece && tile.textContent.trim()) {
+                        // Start holding a piece
+                        holdingPiece = tile.textContent;
+                        tile.textContent = '';
+                        tile.classList.add('holding');
+                    }
+                    
+                    else if (holdingPiece) {
+                        // Drop the piece into the clicked tile
+                        tile.textContent = holdingPiece;
+                        holdingPiece = null;
+                        document.querySelectorAll('.tile').forEach(t => t.classList.remove('holding'));
+                    }
+                });
+            });
+        </script>
     </body>
 </html>
