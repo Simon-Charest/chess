@@ -3,10 +3,11 @@ const fs = require('fs/promises');
 const http = require('http');
 const path = require('path');
 
+const initPath = path.join(__dirname, 'data', 'init.json')
+const dataPath = path.join(__dirname, 'data', 'data.json')
+
 async function main() {
-    // Read configuration
-    const initPath = path.join(__dirname, 'data', 'init.json')
-    const dataPath = path.join(__dirname, 'data', 'data.json')
+    // Read game data
     let data;
     
     if (await pathExists(dataPath)) {
@@ -16,8 +17,6 @@ async function main() {
     else {
         data = await readJsonFile(initPath);
     }
-    
-    writeFormattedJsonFile(dataPath, data);
     
     // Initialize Express app
     const app = express();
@@ -34,9 +33,7 @@ async function main() {
     // Route to render the main page
     app.get('/', async (req, res) => {
         res.render('chess', {
-            data,
-            validateMove,
-            checkPathClear
+            data
         });
     });
 
@@ -58,16 +55,16 @@ async function readJsonFile(path, encoding = 'utf8') {
     return jsonObject;
 }
 
-async function writeJsonFile(path, value, encoding = 'utf8', space = 2) {
+async function writeJsonFile(value, path, encoding = 'utf8', space = 2) {
     const jsonString = JSON.stringify(value, null, space);
     await fs.writeFile(path, jsonString, encoding);
 }
 
-async function writeFormattedJsonFile(path, value, encoding = 'utf8') {
+const writeFormattedJsonFile = (value, path = dataPath, encoding = 'utf8') => {
     const jsonString = '[\n' + value.map(row => {
         return '\t[' + row.map(cell => `"${cell}"`).join(', ') + ']';
     }).join(',\n') + '\n]';
-    await fs.writeFile(path, jsonString, encoding);
+    fs.writeFile(path, jsonString, encoding);
 }
 
 function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
@@ -75,7 +72,20 @@ function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
     const deltaCol = toCol - fromCol;
 
     switch (piece) {
-        case '\u265F': // Black Pawn ♟
+        // White Pawn
+        case '♙':
+            if (deltaRow === -1 && deltaCol === 0 && !board[toRow][toCol]) {
+                return true;
+            }
+
+            if (deltaRow === -1 && Math.abs(deltaCol) === 1 && board[toRow][toCol]) {
+                return true;
+            }
+
+            break;
+
+        // Black Pawn
+        case '♟':
             // Pawns move forward, capture diagonally
             if (deltaRow === 1 && deltaCol === 0 && !board[toRow][toCol]) {
                 // Move forward
@@ -89,27 +99,18 @@ function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
 
             break;
 
-        case '\u2659': // White Pawn ♙
-            if (deltaRow === -1 && deltaCol === 0 && !board[toRow][toCol]) {
-                return true;
-            }
-
-            if (deltaRow === -1 && Math.abs(deltaCol) === 1 && board[toRow][toCol]) {
-                return true;
-            }
-
-            break;
-
-        case '\u265C': // Black Rook ♜
-        case '\u2656': // White Rook ♖
+        // Rook
+        case '♖': 
+        case '♜':
             if (deltaRow === 0 || deltaCol === 0) {
                 return checkPathClear(fromRow, fromCol, toRow, toCol, board);
             }
 
             break;
 
-        case '\u265E': // Black Knight ♞
-        case '\u2658': // White Knight ♘
+        // Knight
+        case '♘':
+        case '♞':
             if ((Math.abs(deltaRow) === 2 && Math.abs(deltaCol) === 1) ||
                 (Math.abs(deltaRow) === 1 && Math.abs(deltaCol) === 2)) {
                 return true;
@@ -117,24 +118,27 @@ function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
 
             break;
 
-        case '\u265D': // Black Bishop ♝
-        case '\u2657': // White Bishop ♗
+        // Bishop
+        case '♗':
+        case '♝':
             if (Math.abs(deltaRow) === Math.abs(deltaCol)) {
                 return checkPathClear(fromRow, fromCol, toRow, toCol, board);
             }
 
             break;
 
-        case '\u265B': // Black Queen ♛
-        case '\u2655': // White Queen ♕
+        // Queen
+        case '♕':
+        case '♛':
             if (Math.abs(deltaRow) === Math.abs(deltaCol) || deltaRow === 0 || deltaCol === 0) {
                 return checkPathClear(fromRow, fromCol, toRow, toCol, board);
             }
 
             break;
 
-        case '\u265A': // Black King ♚
-        case '\u2654': // White King ♔
+        // King
+        case '♔':
+        case '♚':
             if (Math.abs(deltaRow) <= 1 && Math.abs(deltaCol) <= 1) {
                 return true;
             }

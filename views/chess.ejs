@@ -52,6 +52,7 @@
     
             document.addEventListener('DOMContentLoaded', () => {
                 const chessboard = document.getElementById('chessboard');
+                let move;
     
                 // Event listeners for each tile
                 chessboard.addEventListener('click', (event) => {
@@ -64,6 +65,13 @@
                         holdingPiece = tile.textContent;
                         tile.textContent = '';
                         tile.classList.add('holding');
+                        move = {
+                            piece: holdingPiece.trim(),
+                            from: {
+                                row: tile.getAttribute('data-row'),
+                                col: tile.getAttribute('data-col')
+                            }
+                        };
                     }
                     
                     else if (holdingPiece) {
@@ -71,6 +79,13 @@
                         tile.textContent = holdingPiece;
                         holdingPiece = null;
                         document.querySelectorAll('.tile').forEach(t => t.classList.remove('holding'));
+                        move.to = {
+                            row: tile.getAttribute('data-row'),
+                            col: tile.getAttribute('data-col')
+                        };
+
+                        // @TODO: Develop this
+                        console.log(JSON.stringify(move));
                     }
                 });
             });
