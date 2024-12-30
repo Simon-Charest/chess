@@ -3,17 +3,24 @@ A two player chess game made using Node.js.
 
 ## Usage
 
-1. Install and configure prerequisites:
+1. Install prerequisites:
 ```bash
+cd ~
+mkdir source
+cd source
+git clone https://github.com/Simon-Charest/chess.git
+cd chess
+sudo apt update
 sudo apt install nodejs npm
-npm install package.json
+npm install -g npm
+npm install
 npm audit fix --force
 ```
 2. Run Node.js solution:
 ```
 node .
 ```
-3. Open solution: [https://localhost:3000/](https://localhost:3000/).
+3. Open solution: [http://localhost:3000/](http://localhost:3000/).
 
 ## Contact
 ### SLCIT
