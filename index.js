@@ -5,21 +5,36 @@ const path = require('path');
 
 async function main() {
     // Read configuration
-    const config = JSON.parse(await fs.readFile(path.join(__dirname, 'config.json'), 'utf8'));
+    const initPath = path.join(__dirname, 'data', 'init.json')
+    const dataPath = path.join(__dirname, 'data', 'data.json')
+    let data;
+    
+    if (await pathExists(dataPath)) {
+        data = await readJsonFile(dataPath);
+    }
+
+    else {
+        data = await readJsonFile(initPath);
+    }
+    
+    writeFormattedJsonFile(dataPath, data);
     
     // Initialize Express app
     const app = express();
     const hostname = '0.0.0.0';
     const port = process.env.PORT || 3000;
 
+    // Serve static files
+    app.use('/public', express.static(path.join(__dirname, 'public')));
+
     // Set the view engine to EJS
     app.set('view engine', 'ejs');
-    app.set('views', path.join(__dirname, 'views'));
+    app.set('views', path.join(__dirname, 'views'));    
 
     // Route to render the main page
     app.get('/', async (req, res) => {
         res.render('chess', {
-            initialBoard: config.initialBoard,
+            data,
             validateMove,
             checkPathClear
         });
@@ -31,6 +46,30 @@ async function main() {
     });
 }
 
+const pathExists = async (path) =>
+    fs.access(path)
+        .then(() => true)
+        .catch(() => false);
+
+async function readJsonFile(path, encoding = 'utf8') {
+    const text = await fs.readFile(path, encoding);
+    const jsonObject = JSON.parse(text);
+
+    return jsonObject;
+}
+
+async function writeJsonFile(path, value, encoding = 'utf8', space = 2) {
+    const jsonString = JSON.stringify(value, null, space);
+    await fs.writeFile(path, jsonString, encoding);
+}
+
+async function writeFormattedJsonFile(path, value, encoding = 'utf8') {
+    const jsonString = '[\n' + value.map(row => {
+        return '\t[' + row.map(cell => `"${cell}"`).join(', ') + ']';
+    }).join(',\n') + '\n]';
+    await fs.writeFile(path, jsonString, encoding);
+}
+
 function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
     const deltaRow = toRow - fromRow;
     const deltaCol = toCol - fromCol;
@@ -39,11 +78,13 @@ function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
         case '\u265F': // Black Pawn ♟
             // Pawns move forward, capture diagonally
             if (deltaRow === 1 && deltaCol === 0 && !board[toRow][toCol]) {
-                return true; // Move forward
+                // Move forward
+                return true;
             }
 
             if (deltaRow === 1 && Math.abs(deltaCol) === 1 && board[toRow][toCol]) {
-                return true; // Capture diagonally
+                // Capture diagonally
+                return true;
             }
 
             break;
