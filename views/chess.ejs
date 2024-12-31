@@ -84,8 +84,12 @@
                             col: tile.getAttribute('data-col')
                         };
 
-                        // @TODO: Develop this
+                        // Debug
                         console.log(JSON.stringify(move));
+
+                        // Send move to server
+                        const url = `/move?fromRow=${move.from.row}&fromCol=${move.from.col}&toRow=${move.to.row}&toCol=${move.to.col}`;
+                        fetch(url);
                     }
                 });
             });

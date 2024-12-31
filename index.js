@@ -37,6 +37,30 @@ async function main() {
         });
     });
 
+    app.get('/move', async (req, res) => {
+        // Receive move from client
+        const move = {
+            from: {
+                row: parseInt(req.query.fromRow, 10),
+                col: parseInt(req.query.fromCol, 10)
+            },
+            to: {
+                row: parseInt(req.query.toRow, 10),
+                col: parseInt(req.query.toCol, 10)
+            }
+        };
+    
+        // Debug
+        console.log(JSON.stringify(move));
+
+        // Process the move using the received integers
+        data[move.to.row][move.to.col] = data[move.from.row][move.from.col];
+        data[move.from.row][move.from.col] = "";
+
+        // Save updated board to file
+        writeFormattedJsonFile(data);
+    });
+    
     // Start HTTP server
     http.createServer(app).listen(port, hostname, () => {
         console.log(`HTTP Server running at http://${hostname}:${port}/`);
