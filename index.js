@@ -2,11 +2,12 @@ const express = require('express');
 const fs = require('fs/promises');
 const http = require('http');
 const path = require('path');
-
-const initPath = path.join(__dirname, 'data', 'init.json')
-const dataPath = path.join(__dirname, 'data', 'data.json')
+const WebSocket = require('ws');
 
 async function main() {
+    const initPath = path.join(__dirname, 'data', 'init.json')
+    const dataPath = path.join(__dirname, 'data', 'data.json')
+
     // Read game data
     let data;
     
@@ -58,7 +59,23 @@ async function main() {
         data[move.from.row][move.from.col] = "";
 
         // Save updated board to file
-        writeFormattedJsonFile(data);
+        writeFormattedJsonFile(data, dataPath);
+
+        // Broadcast refresh signal to all WebSocket clients
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send('refresh');
+            }
+        });
+
+        // Respond to the client
+        res.sendStatus(200);
+    });
+
+    const wss = new WebSocket.Server({ port: 8080 });
+
+    wss.on('connection', (ws) => {
+        console.log('New WebSocket connection established');
     });
     
     // Start HTTP server
@@ -84,11 +101,30 @@ async function writeJsonFile(value, path, encoding = 'utf8', space = 2) {
     await fs.writeFile(path, jsonString, encoding);
 }
 
-const writeFormattedJsonFile = (value, path = dataPath, encoding = 'utf8') => {
+const writeFormattedJsonFile = async (value, path, encoding = 'utf8') => {
     const jsonString = '[\n' + value.map(row => {
         return '\t[' + row.map(cell => `"${cell}"`).join(', ') + ']';
     }).join(',\n') + '\n]';
-    fs.writeFile(path, jsonString, encoding);
+    await fs.writeFile(path, jsonString, encoding);
+}
+
+function checkPathClear(fromRow, fromCol, toRow, toCol, board) {
+    const rowStep = Math.sign(toRow - fromRow);
+    const colStep = Math.sign(toCol - fromCol);
+    let currentRow = fromRow + rowStep;
+    let currentCol = fromCol + colStep;
+
+    while (currentRow !== toRow || currentCol !== toCol) {
+        if (board[currentRow][currentCol]) {
+            // Path is blocked
+            return false;
+        }
+
+        currentRow += rowStep;
+        currentCol += colStep;
+    }
+
+    return true;
 }
 
 function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
@@ -171,25 +207,6 @@ function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
     }
 
     return false;
-}
-
-function checkPathClear(fromRow, fromCol, toRow, toCol, board) {
-    const rowStep = Math.sign(toRow - fromRow);
-    const colStep = Math.sign(toCol - fromCol);
-    let currentRow = fromRow + rowStep;
-    let currentCol = fromCol + colStep;
-
-    while (currentRow !== toRow || currentCol !== toCol) {
-        if (board[currentRow][currentCol]) {
-            // Path is blocked
-            return false;
-        }
-
-        currentRow += rowStep;
-        currentCol += colStep;
-    }
-
-    return true;
 }
 
 main();

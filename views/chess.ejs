@@ -93,6 +93,33 @@
                     }
                 });
             });
+
+            const socket = new WebSocket('ws://localhost:8080');
+
+            // Log connection
+            socket.addEventListener('open', () => {
+                console.log('WebSocket connection established');
+            });
+
+            // Listen for messages from the server
+            socket.addEventListener('message', (event) => {
+                console.log('Message received from server:', event.data);
+
+                if (event.data === 'refresh') {
+                    // Refresh the entire page
+                    location.reload();
+                }
+            });
+
+            // Handle connection errors
+            socket.addEventListener('error', (error) => {
+                console.error('WebSocket error:', error);
+            });
+
+            // Handle connection closure
+            socket.addEventListener('close', () => {
+                console.log('WebSocket connection closed');
+            });
         </script>
     </body>
 </html>
