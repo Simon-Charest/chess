@@ -130,4 +130,4 @@ dist
 .pnp.*
 
 .vscode/
-/data/data.json
+/data/board.json

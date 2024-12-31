@@ -38,7 +38,7 @@
     <body>
         <h1>Chess</h1>
         <div class="chessboard" id="chessboard">
-            <% data.forEach((row, rowIndex) => { %>
+            <% board.forEach((row, rowIndex) => { %>
                 <% row.forEach((piece, colIndex) => { %>
                     <div class="tile <%= (rowIndex + colIndex) % 2 === 0 ? 'white' : 'black' %>" 
                          data-row="<%= rowIndex %>" data-col="<%= colIndex %>">

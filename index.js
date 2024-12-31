@@ -6,17 +6,17 @@ const WebSocket = require('ws');
 
 async function main() {
     const initPath = path.join(__dirname, 'data', 'init.json')
-    const dataPath = path.join(__dirname, 'data', 'data.json')
+    const boardPath = path.join(__dirname, 'data', 'board.json')
 
-    // Read game data
-    let data;
+    // Read game board
+    let board;
     
-    if (await pathExists(dataPath)) {
-        data = await readJsonFile(dataPath);
+    if (await pathExists(boardPath)) {
+        board = await readJsonFile(boardPath);
     }
 
     else {
-        data = await readJsonFile(initPath);
+        board = await readJsonFile(initPath);
     }
     
     // Initialize Express app
@@ -34,7 +34,7 @@ async function main() {
     // Route to render the main page
     app.get('/', async (req, res) => {
         res.render('chess', {
-            data
+            board
         });
     });
 
@@ -54,12 +54,14 @@ async function main() {
         // Debug
         console.log(JSON.stringify(move));
 
-        // Process the move using the received integers
-        data[move.to.row][move.to.col] = data[move.from.row][move.from.col];
-        data[move.from.row][move.from.col] = "";
-
-        // Save updated board to file
-        writeFormattedJsonFile(data, dataPath);
+        if (validateMove(move.from.row, move.from.col, move.to.row, move.to.col, board)) {
+            // Process the move using the received integers
+            board[move.to.row][move.to.col] = board[move.from.row][move.from.col];
+            board[move.from.row][move.from.col] = "";
+        
+            // Save updated board to file
+            writeFormattedJsonFile(board, boardPath); 
+        }
 
         // Broadcast refresh signal to all WebSocket clients
         wss.clients.forEach(client => {
@@ -108,28 +110,10 @@ const writeFormattedJsonFile = async (value, path, encoding = 'utf8') => {
     await fs.writeFile(path, jsonString, encoding);
 }
 
-function checkPathClear(fromRow, fromCol, toRow, toCol, board) {
-    const rowStep = Math.sign(toRow - fromRow);
-    const colStep = Math.sign(toCol - fromCol);
-    let currentRow = fromRow + rowStep;
-    let currentCol = fromCol + colStep;
-
-    while (currentRow !== toRow || currentCol !== toCol) {
-        if (board[currentRow][currentCol]) {
-            // Path is blocked
-            return false;
-        }
-
-        currentRow += rowStep;
-        currentCol += colStep;
-    }
-
-    return true;
-}
-
-function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
+function validateMove(fromRow, fromCol, toRow, toCol, board) {
     const deltaRow = toRow - fromRow;
     const deltaCol = toCol - fromCol;
+    const piece = board[fromRow][fromCol];
 
     switch (piece) {
         // White Pawn
@@ -207,6 +191,25 @@ function validateMove(piece, fromRow, fromCol, toRow, toCol, board) {
     }
 
     return false;
+}
+
+function checkPathClear(fromRow, fromCol, toRow, toCol, board) {
+    const rowStep = Math.sign(toRow - fromRow);
+    const colStep = Math.sign(toCol - fromCol);
+    let currentRow = fromRow + rowStep;
+    let currentCol = fromCol + colStep;
+
+    while (currentRow !== toRow || currentCol !== toCol) {
+        if (board[currentRow][currentCol]) {
+            // Path is blocked
+            return false;
+        }
+
+        currentRow += rowStep;
+        currentCol += colStep;
+    }
+
+    return true;
 }
 
 main();
