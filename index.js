@@ -54,7 +54,16 @@ async function main() {
         // Debug
         console.log(JSON.stringify(move));
 
-        if (validateMove(move.from.row, move.from.col, move.to.row, move.to.col, game['board'])) {
+        const piece = game['board'][move.from.row][move.from.col];
+
+        if (
+            // Check if the piece belongs to the current turn's color
+            (
+                (game['color'] === 'white' && '♙♖♘♗♕♔'.includes(piece)) ||
+                (game['color'] === 'black' && '♟♜♞♝♛♚'.includes(piece))
+            ) &&
+            validateMove(move.from.row, move.from.col, move.to.row, move.to.col, game['board'])
+        ) {
             // Process the move using the received integers
             game['board'][move.to.row][move.to.col] = game['board'][move.from.row][move.from.col];
             game['board'][move.from.row][move.from.col] = "";
