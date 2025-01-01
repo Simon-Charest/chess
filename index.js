@@ -55,12 +55,18 @@ async function main() {
         console.log(JSON.stringify(move));
 
         const piece = game['board'][move.from.row][move.from.col];
+        const target = game['board'][move.to.row][move.to.col];
 
         if (
             // Check if the piece belongs to the current turn's color
             (
-                (game['color'] === 'white' && '♙♖♘♗♕♔'.includes(piece)) ||
-                (game['color'] === 'black' && '♟♜♞♝♛♚'.includes(piece))
+                (game['color'] === 'white' && game['white'].includes(piece)) ||
+                (game['color'] === 'black' && game['black'].includes(piece))
+            ) &&
+            // Check if the target tile contains a piece of the same color
+            (
+                (game['color'] === 'white' && !game['white'].includes(target)) ||
+                (game['color'] === 'black' && !game['black'].includes(target))
             ) &&
             validateMove(move.from.row, move.from.col, move.to.row, move.to.col, game['board'])
         ) {
