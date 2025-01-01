@@ -6,17 +6,17 @@ const WebSocket = require('ws');
 
 async function main() {
     const initPath = path.join(__dirname, 'data', 'init.json')
-    const boardPath = path.join(__dirname, 'data', 'board.json')
+    const gamePath = path.join(__dirname, 'data', 'game.json')
 
-    // Read game board
-    let board;
+    // Read game data
+    let game;
     
-    if (await pathExists(boardPath)) {
-        board = await readJsonFile(boardPath);
+    if (await pathExists(gamePath)) {
+        game = await readJsonFile(gamePath);
     }
 
     else {
-        board = await readJsonFile(initPath);
+        game = await readJsonFile(initPath);
     }
     
     // Initialize Express app
@@ -34,7 +34,7 @@ async function main() {
     // Route to render the main page
     app.get('/', async (req, res) => {
         res.render('chess', {
-            board
+            game
         });
     });
 
@@ -54,13 +54,21 @@ async function main() {
         // Debug
         console.log(JSON.stringify(move));
 
-        if (validateMove(move.from.row, move.from.col, move.to.row, move.to.col, board)) {
+        if (validateMove(move.from.row, move.from.col, move.to.row, move.to.col, game['board'])) {
             // Process the move using the received integers
-            board[move.to.row][move.to.col] = board[move.from.row][move.from.col];
-            board[move.from.row][move.from.col] = "";
+            game['board'][move.to.row][move.to.col] = game['board'][move.from.row][move.from.col];
+            game['board'][move.from.row][move.from.col] = "";
+
+            if (game['color'] == 'white') { 
+                game['color'] = "black";
+            }
+
+            else {
+                game['color'] = "white";
+            }
         
-            // Save updated board to file
-            writeFormattedJsonFile(board, boardPath); 
+            // Save updated game data to file
+            writeJsonFile(game, gamePath);
         }
 
         // Broadcast refresh signal to all WebSocket clients
@@ -103,13 +111,6 @@ async function writeJsonFile(value, path, encoding = 'utf8', space = 2) {
     await fs.writeFile(path, jsonString, encoding);
 }
 
-const writeFormattedJsonFile = async (value, path, encoding = 'utf8') => {
-    const jsonString = '[\n' + value.map(row => {
-        return '\t[' + row.map(cell => `"${cell}"`).join(', ') + ']';
-    }).join(',\n') + '\n]';
-    await fs.writeFile(path, jsonString, encoding);
-}
-
 function validateMove(fromRow, fromCol, toRow, toCol, board) {
     const deltaRow = toRow - fromRow;
     const deltaCol = toCol - fromCol;
@@ -118,29 +119,40 @@ function validateMove(fromRow, fromCol, toRow, toCol, board) {
     switch (piece) {
         // White Pawn
         case '♙':
+            // Single move forward
             if (deltaRow === -1 && deltaCol === 0 && !board[toRow][toCol]) {
                 return true;
             }
-
+    
+            // Double move forward on the first move
+            if (fromRow === 6 && deltaRow === -2 && deltaCol === 0 && !board[toRow][toCol] && !board[toRow + 1][toCol]) {
+                return true;
+            }
+    
+            // Capture diagonally
             if (deltaRow === -1 && Math.abs(deltaCol) === 1 && board[toRow][toCol]) {
                 return true;
             }
-
+    
             break;
-
+    
         // Black Pawn
         case '♟':
-            // Pawns move forward, capture diagonally
+            // Single move forward
             if (deltaRow === 1 && deltaCol === 0 && !board[toRow][toCol]) {
-                // Move forward
                 return true;
             }
-
+    
+            // Double move forward on the first move
+            if (fromRow === 1 && deltaRow === 2 && deltaCol === 0 && !board[toRow][toCol] && !board[toRow - 1][toCol]) {
+                return true;
+            }
+    
+            // Capture diagonally
             if (deltaRow === 1 && Math.abs(deltaCol) === 1 && board[toRow][toCol]) {
-                // Capture diagonally
                 return true;
             }
-
+    
             break;
 
         // Rook
