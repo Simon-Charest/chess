@@ -33,7 +33,7 @@
                 width: 50px;
                 height: 50px;
             }
-            #turn-indicator {
+            #turn-indicator, #check-indicator {
                 font-size: 1.5rem;
                 margin-bottom: 10px;
             }
@@ -42,6 +42,13 @@
     <body>
         <h1>Chess</h1>
         <div id="turn-indicator">Turn: <%= game['color'] %></div>
+        <% let indicator = ""; %>
+        <% if (game['checkmate']) { %>
+            <% indicator = "checkmate"; %>
+        <% } else if (game['check']) { %>
+            <% indicator = "check"; %>
+        <% } %>
+        <div id="check-indicator"><%= indicator %></div>
         <div class="chessboard" id="chessboard">
             <% game['board'].forEach((row, rowIndex) => { %>
                 <% row.forEach((piece, colIndex) => { %>
@@ -73,8 +80,7 @@
                         move = {
                             piece: holdingPiece.trim(),
                             from: {
-                                row: tile.getAttribute('data-row'),
-                                col: tile.getAttribute('data-col')
+                                row: tile.getAttribute('data-row'), col: tile.getAttribute('data-col')
                             }
                         };
                     }
@@ -85,8 +91,7 @@
                         holdingPiece = null;
                         document.querySelectorAll('.tile').forEach(t => t.classList.remove('holding'));
                         move.to = {
-                            row: tile.getAttribute('data-row'),
-                            col: tile.getAttribute('data-col')
+                            row: tile.getAttribute('data-row'), col: tile.getAttribute('data-col')
                         };
 
                         // Debug

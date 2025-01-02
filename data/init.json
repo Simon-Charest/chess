@@ -1,4 +1,6 @@
 {
+    "check": false,
+    "checkmate": false,
     "color": "white",
     "black": ["♜", "♞", "♝", "♛", "♚","♟"],
     "white": ["♖", "♘", "♗", "♕", "♔","♙"],
