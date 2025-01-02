@@ -77,8 +77,7 @@ async function main() {
                 switchPlayer(game);
 
                 // Check if player in check
-                // @TODO: Fix this
-                //game['check'] = isCheck(game['color'], game['board']);
+                game['check'] = isCheck(game['color'], game['board']);
 
                 // Save updated game data to file
                 writeJsonFile(game, gamePath);
